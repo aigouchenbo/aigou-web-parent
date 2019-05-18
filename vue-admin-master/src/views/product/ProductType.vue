@@ -4,33 +4,14 @@
             <!--@node-click="handleNodeClick"-->
             <!--default-expand-all :expand-on-click-node="false"-->
             <el-tree :data="productTypes" :props="defaultProps" node-key="id"  @node-contextmenu = "rihgtClick"></el-tree>
+            <div v-show = "menuVisible">
+                <ul id = "menu">
+                    <li tabindex="-1" class="menu__item" id="menu-4994-1-0">添加</li>
+                    <li tabindex="-1" class="menu__item" id="menu-4994-1-1">修改</li>
+                    <li tabindex="-1" class="menu__item" id="menu-4994-1-2">删除</li>
+                </ul>
+            </div>
         </el-aside>
-        <!--<span class="custom-tree-node" slot-scope="{ node, data }">-->
-              <!--<span>-->
-                 <!--<i v-if ="node.data.flag" :class="node.icon[0]"> </i>-->
-                 <!--<i v-else-if="node.data.flag === false" :class = "node.icon[1]"></i>-->
-                   <!--{{ node.label }}-->
-              <!--</span>-->
-                <!--<span>-->
-              <!--&lt;!&ndash;定义菜单及菜单项的操作&ndash;&gt;-->
-                   <!--<div v-show = "menuVisible" ref="menu">-->
-                     <!--<ul id = "menu">-->
-                       <!--<li tabindex="-1" class="menu__item" id="menu-4994-1-0" @click = "() => append(data)">-->
-                         <!--<i class="el-icon-circle-plus-outline"></i>-->
-                           <!--添加-->
-                         <!--</li>-->
-                         <!--<li tabindex="-1" class="menu__item" id="menu-4994-1-1">-->
-                           <!--<i class="el-icon-edit"></i>-->
-                           <!--修改-->
-                        <!--</li>-->
-                        <!--<li tabindex="-1" class="menu__item" id="menu-4994-1-2"  @click = "() => remove(data)">-->
-                           <!--<i class="el-icon-remove-outline"></i>-->
-                           <!--删除-->
-                        <!--</li>-->
-                      <!--</ul>-->
-                    <!--</div>-->
-                <!--</span>-->
-         <!--</span>-->
         <el-main>
 
         </el-main>
@@ -69,20 +50,6 @@
                 console.log("右键被点击的value:",value);
                 console.log("右键被点击的element:",element);
 
-            },
-            append(data) {
-                console.log("当前data为：",data);
-                const newChild = { id: id++, label: 'testtest', children: [] };
-                if (!data.children) {
-                    this.$set(data, 'children', []);
-                }
-                data.children.push(newChild);
-            },
-            remove(node, data) {
-                const parent = node.parent;
-                const children = parent.data.children || parent.data;
-                const index = children.findIndex(d => d.id === data.id);
-                children.splice(index, 1);
             },
         },
         mounted(){

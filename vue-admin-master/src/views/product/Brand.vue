@@ -50,7 +50,7 @@
             </el-pagination>
         </el-col>
         <!--新增界面-->
-        <el-dialog title="新增" v-model="addFormVisible" :close-on-click-modal="false">
+        <el-dialog title="新增" :visible.sync="centerDialogVisible" :close-on-click-modal="false">
             <el-form :model="brand" label-width="80px" :rules="addFormRules" ref="brand">
                 <el-form-item label="姓名" prop="name">
                     <el-input v-model="brand.name" auto-complete="off"></el-input>
@@ -78,7 +78,7 @@
                 </el-form-item>
             </el-form>
             <div slot="footer" class="dialog-footer">
-                <el-button @click.native="addFormVisible = false">取消</el-button>
+                <el-button @click.native="centerDialogVisible = false">取消</el-button>
                 <el-button type="primary" @click.native="addSubmit" :loading="addLoading">提交</el-button>
             </div>
         </el-dialog>
@@ -99,7 +99,7 @@
                 listLoading: false,
                 sels: [],//列表选中列
 
-                editFormVisible: false,//编辑界面是否显示
+                centerDialogVisible: false,//编辑界面是否显示
                 editLoading: false,
                 editFormRules: {
                     name: [
@@ -122,7 +122,7 @@
                 productType:{
                     id:''
                 },
-                addFormVisible: false,//新增界面是否显示
+                centerDialogVisible: false,//新增界面是否显示
                 addLoading: false,
                 addFormRules: {
                     name: [
@@ -140,7 +140,6 @@
             getBrands() {
                 this.listLoading = true;
                 //NProgress.start();
-
                 this.$http.post("/product/brand/page",{
                         page:this.page,
                         size:this.size,
@@ -167,20 +166,14 @@
                     type: 'warning'
                 }).then(() => {
                     this.listLoading = true;
-                    //NProgress.start();
-                    // let para = { id: row.id };
-
-
-                    this.$http.get("/product//brand/{id}="+row.id ,{
-                        page:this.page,
-                        size:this.size,
-                        keyword:this.filters.keyword
-                    }).then((res)=>{
+                    this.$http.get("/product//brand/{id}="+row.id)
+                        .then((res)=>{
                         this.listLoading = false;
-                        let data = res.data;//PageList
-
-                        this.brands = data.rows;
-                        this.total = data.total;
+                        this.$message({
+                            message: '删除成功',
+                            type: 'success'
+                        });
+                        this.getBrands();
                     })
                     // removeUser(para).then((res) => {
                     //     this.listLoading = false;
@@ -197,19 +190,34 @@
             },
             //显示编辑界面
             handleEdit: function (index, row) {
-                this.editFormVisible = true;
-                this.editForm = Object.assign({}, row);
+                this.centerDialogVisible = true;
+                this.brand={
+                    name:row.name,
+                    englishName:row.englishName,
+                    firstLetter:row.firstLetter,
+                    sortIndex:row.sortIndex,
+                    logo:row.logo,
+                    productType:{
+                        id:row.productType
+                    },
+                    description:row.description
+                }
+
             },
             //显示新增界面
             handleAdd: function () {
-                this.addFormVisible = true;
-                this.addForm = {
-                    name: '',
-                    sex: -1,
-                    age: 0,
-                    birth: '',
-                    addr: ''
-                };
+                this.centerDialogVisible = true;
+                this.brand={
+                    name:'',
+                        englishName:'',
+                        firstLetter:'',
+                        sortIndex:'',
+                        logo:'',
+                        productType:{
+                            id:''
+                        },
+                    description:''
+                }
             },
             //编辑
             editSubmit: function () {
@@ -252,7 +260,7 @@
                                     type: 'success'
                                 });
                                 this.$refs['addForm'].resetFields();
-                                this.addFormVisible = false;
+                                this.centerDialogVisible = false;
                                 this.getBrands();
                             });
                         });
