@@ -16,7 +16,8 @@
         </el-col>
 
         <!--列表-->
-        <el-table :data="brands" highlight-current-row v-loading="listLoading" @selection-change="selsChange" style="width: 100%;">
+        <el-table :data="brands" highlight-current-row v-loading="listLoading" @selection-change="selsChange"
+                  style="width: 100%;">
             <el-table-column type="selection" width="55">
             </el-table-column>
             <el-table-column type="index" width="60">
@@ -29,7 +30,7 @@
             </el-table-column>
             <el-table-column prop="sortIndex" label="序号" sortable>
             </el-table-column>
-            <el-table-column prop="logo" label="品牌logo"  sortable>
+            <el-table-column prop="logo" label="品牌logo" sortable>
             </el-table-column>
             <el-table-column prop="productType.name" label="商品类型" sortable>
             </el-table-column>
@@ -46,39 +47,49 @@
         <!--工具条-->
         <el-col :span="24" class="toolbar">
             <el-button type="danger" @click="batchRemove" :disabled="this.sels.length===0">批量删除</el-button>
-            <el-pagination layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="size" :total="total" style="float:right;">
+            <el-pagination layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="size"
+                           :total="total" style="float:right;">
             </el-pagination>
         </el-col>
+
         <!--新增界面-->
-        <el-dialog title="新增" :visible.sync="centerDialogVisible" :close-on-click-modal="false">
-            <el-form :model="brand" label-width="80px" :rules="addFormRules" ref="brand">
-                <el-form-item label="姓名" prop="name">
+        <el-dialog title="新增" :visible.sync="brandVisible" :close-on-click-modal="false">
+            <el-form :model="brand" label-width="80px" :rules="brandRules" ref="brand">
+                <el-form-item label="名称" prop="name">
                     <el-input v-model="brand.name" auto-complete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="英文名">
+                <el-form-item label="英文名" prop="englishName">
                     <el-input v-model="brand.englishName" auto-complete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="首字母">
-                    <el-input v-model="brand.firstLetter" auto-complete="off"></el-input>
-                </el-form-item>
-                <el-form-item label="序号">
+                <el-form-item label="序号" prop="sortIndex">
                     <el-input v-model="brand.sortIndex" auto-complete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="品牌logo">
-                    <el-input v-model="brand.logo" auto-complete="off"></el-input>
+                <el-form-item label="logo">
+                    <el-upload
+                            class="upload-demo"
+                            action="http://localhost:9527/services/common/file/upload"
+                            :before-remove="handleLogoRemove"
+                            :file-list="logoList"
+                            list-type="picture"
+                            :limit="1"
+                            :on-success="handleUploadSeccess"
+                            :on-exceed="handleOutOfRange">
+                        <el-button size="small" type="primary">点击上传</el-button>
+                    </el-upload>
                 </el-form-item>
-                <el-form-item label="商品类型">
-                    <el-select v-model="brand.productType" clearable filterable placeholder="请选择部门">
-                        <el-option v-for="item in productTypes" :label="item.name" :value="item.id">
-                        </el-option>
-                    </el-select>
+                <el-form-item label="商品类型" prop="productTypeId">
+                    <el-cascader style="width:100%"
+                                 :options="productTypes"
+                                 v-model="brand.productTypeId"
+                                 :props="productProps">
+                    </el-cascader>
                 </el-form-item>
-                <el-form-item label="描述">
-                    <el-input v-model="brand.description" auto-complete="off"></el-input>
+                <el-form-item label="描述" prop="description">
+                    <el-input v-model="brand.description" type="textarea" auto-complete="off"></el-input>
                 </el-form-item>
             </el-form>
             <div slot="footer" class="dialog-footer">
-                <el-button @click.native="centerDialogVisible = false">取消</el-button>
+                <el-button @click.native="brandVisible = false">取消</el-button>
                 <el-button type="primary" @click.native="addSubmit" :loading="addLoading">提交</el-button>
             </div>
         </el-dialog>
@@ -89,49 +100,93 @@
     export default {
         data() {
             return {
+                productTypes: [],
+                productProps: {
+                    label: "name",
+                    value: "id"
+                },
+                //logo
+                logoList: [],
                 filters: {
                     keyword: ''
                 },
                 brands: [],
                 total: 0,
                 page: 1,
-                size:10,
+                size: 10,
                 listLoading: false,
-                sels: [],//列表选中列
-
-                centerDialogVisible: false,//编辑界面是否显示
+                sels: [],
+                editFormVisible: false,
                 editLoading: false,
                 editFormRules: {
                     name: [
-                        { required: true, message: '请输入姓名', trigger: 'blur' }
+                        {required: true, message: '请输入姓名', trigger: 'blur'}
                     ]
                 },
-                productTypes:[],
-                //编辑界面数据
-                brand:{
-                    name:'',
-                    englishName:'',
-                    firstLetter:'',
-                    sortIndex:'',
-                    logo:'',
-                    productType:{
-                        id:''
-                    },
-                    description:''
-                },
-                productType:{
-                    id:''
-                },
-                centerDialogVisible: false,//新增界面是否显示
+                brandVisible: false,//新增界面是否显示
                 addLoading: false,
-                addFormRules: {
+                brandRules: {
                     name: [
-                        { required: true, message: '请输入姓名', trigger: 'blur' }
+                        {required: true, message: '请输入姓名', trigger: 'blur'}
+                    ],
+                    englishName: [
+                        {required: true, message: '请输入英文名', trigger: 'blur'}
+                    ],
+                    sortIndex: [
+                        {required: true, message: '请输入序号', trigger: 'blur'}
+                    ],
+                    productTypeId: [
+                        {required: true, message: '请选择商品类型', trigger: 'blur'}
                     ]
+
                 },
+                //新增界面数据
+                brand: {
+                    name: '',
+                    englishName: '',
+                    sortIndex: null,
+                    productTypeId: null,
+                    description: '',
+                    logo:null
+                }
+
             }
         },
         methods: {
+            //文件上传成功钩子函数
+            handleUploadSeccess(response){
+                this.brand.logo = response.data;
+            },
+            //文件超出个数
+            handleOutOfRange(){
+                this.$message({
+                    message: '一次只能上传一张图片',
+                    type: 'warning'
+                });
+            },
+            //删除文件
+            handleLogoRemove(file, fileList){
+                console.log("file",file);//删除的回掉
+                this.$http.get("/common/file/delete",{
+                    params:{
+                        fileId:file.response.data
+                    }
+                }).then(res=>{
+                    let data = res.data;
+                    if(data.success){
+                        this.$message({
+                            message: '删除成功',
+                            type: 'success'
+                        });
+                    }else{
+                        this.$message({
+                            message: '删除失败',
+                            type: 'error'
+                        });
+                        return false;//阻止删除
+                    }
+                })
+            },
             handleCurrentChange(val) {
                 this.page = val;
                 this.getBrands();
@@ -139,26 +194,35 @@
             //获取商品品牌列表
             getBrands() {
                 this.listLoading = true;
-                //NProgress.start();
-                this.$http.post("/product/brand/page",{
-                        page:this.page,
-                        size:this.size,
-                        keyword:this.filters.keyword
-                }).then((res)=>{
+                this.$http.post("/product/brand/page", {
+                    page: this.page,
+                    size: this.size,
+                    keyword: this.filters.keyword
+                }).then((res) => {
                     this.listLoading = false;
                     let data = res.data;//PageList
 
                     this.brands = data.rows;
                     this.total = data.total;
                 })
-
-                /*
-                getUserListPage(para).then((res) => {
-                    this.total = res.data.total;
-                    this.users = res.data.users;
-                    this.listLoading = false;
-                    //NProgress.done();
-                });*/
+            },
+            //加载商品类型
+            getProductTypes() {
+                this.$http.get("/product/productType/tree").then((res) => {
+                    this.productTypes = this.getTreeData(res.data);
+                })
+            },
+            getTreeData(data) {
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i].children.length < 1) {
+                        // children若为空数组，则将children设为undefined
+                        data[i].children = undefined;
+                    } else {
+                        // children若不为空数组，则继续 递归调用 本方法
+                        this.getTreeData(data[i].children);
+                    }
+                }
+                return data;
             },
             //删除
             handleDel: function (index, row) {
@@ -166,58 +230,36 @@
                     type: 'warning'
                 }).then(() => {
                     this.listLoading = true;
-                    this.$http.get("/product//brand/{id}="+row.id)
-                        .then((res)=>{
+                    //NProgress.start();
+                    let para = {id: row.id};
+                    removeUser(para).then((res) => {
                         this.listLoading = false;
+                        //NProgress.done();
                         this.$message({
                             message: '删除成功',
                             type: 'success'
                         });
                         this.getBrands();
-                    })
-                    // removeUser(para).then((res) => {
-                    //     this.listLoading = false;
-                    //     //NProgress.done();
-                    //     this.$message({
-                    //         message: '删除成功',
-                    //         type: 'success'
-                    //     });
-                    //     this.getBrands();
-                    // });
+                    });
                 }).catch(() => {
 
                 });
             },
             //显示编辑界面
             handleEdit: function (index, row) {
-                this.centerDialogVisible = true;
-                this.brand={
-                    name:row.name,
-                    englishName:row.englishName,
-                    firstLetter:row.firstLetter,
-                    sortIndex:row.sortIndex,
-                    logo:row.logo,
-                    productType:{
-                        id:row.productType
-                    },
-                    description:row.description
-                }
-
+                this.editFormVisible = true;
+                this.editForm = Object.assign({}, row);
             },
             //显示新增界面
             handleAdd: function () {
-                this.centerDialogVisible = true;
-                this.brand={
-                    name:'',
-                        englishName:'',
-                        firstLetter:'',
-                        sortIndex:'',
-                        logo:'',
-                        productType:{
-                            id:''
-                        },
-                    description:''
-                }
+                this.brandVisible = true;
+                this.brand = {
+                    name: '',
+                    sex: -1,
+                    age: 0,
+                    birth: '',
+                    addr: ''
+                };
             },
             //编辑
             editSubmit: function () {
@@ -245,24 +287,50 @@
             },
             //新增
             addSubmit: function () {
-                this.$refs.addForm.validate((valid) => {
+                //this.$refs.brand 获取到组件对象
+                this.$refs.brand.validate((valid) => {
                     if (valid) {
                         this.$confirm('确认提交吗？', '提示', {}).then(() => {
                             this.addLoading = true;
                             //NProgress.start();
-                            let para = Object.assign({}, this.addForm);
-                            para.birth = (!para.birth || para.birth == '') ? '' : util.formatDate.format(new Date(para.birth), 'yyyy-MM-dd');
-                            addUser(para).then((res) => {
+                            //格式化部分参数  productTypeId=[1,2,3]  ===> productTypeId=1
+                            let para = Object.assign({}, this.brand);
+                            para.productTypeId = para.productTypeId[para.productTypeId.length - 1];
+                            //发送请求
+                            this.$http.post("/product/brand", para).then((res) => {
+                                this.addLoading = false;
+                                //NProgress.done();
+                                let data = res.data;
+                                if (data.success) {
+                                    this.$message({
+                                        message: '提交成功',
+                                        type: 'success'
+                                    });
+                                    //重置表单
+                                    this.$refs['brand'].resetFields();
+                                    //关闭模态框
+                                    this.brandVisible = false;
+                                    //重新加载table
+                                    this.getBrands();
+                                } else {
+                                    this.$message({
+                                        message: data.message,
+                                        type: 'error'
+                                    });
+                                }
+                            })
+
+                            /*addUser(para).then((res) => {
                                 this.addLoading = false;
                                 //NProgress.done();
                                 this.$message({
                                     message: '提交成功',
                                     type: 'success'
                                 });
-                                this.$refs['addForm'].resetFields();
-                                this.centerDialogVisible = false;
+                                this.$refs['brand'].resetFields();
+                                this.brandVisible = false;
                                 this.getBrands();
-                            });
+                            });*/
                         });
                     }
                 });
@@ -278,7 +346,7 @@
                 }).then(() => {
                     this.listLoading = true;
                     //NProgress.start();
-                    let para = { ids: ids };
+                    let para = {ids: ids};
                     batchRemoveUser(para).then((res) => {
                         this.listLoading = false;
                         //NProgress.done();
@@ -291,11 +359,12 @@
                 }).catch(() => {
 
                 });
-            },
+            }
         },
         //$(function(){})
         mounted() {
             this.getBrands();
+            this.getProductTypes();
         }
     }
 
